@@ -22,6 +22,9 @@ builder.Services.AddHttpClient();
 // Register application services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IRatingService, RatingService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
