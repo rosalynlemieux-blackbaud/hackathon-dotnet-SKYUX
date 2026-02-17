@@ -1,0 +1,93 @@
+# Render Deployment Configuration
+# https://render.com/docs/deploy-dotnet
+
+services:
+  - type: web
+    name: hackathon-api
+    runtime: docker
+    plan: starter
+    region: oregon
+    
+    # Build configuration
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./
+    
+    # Environment variables
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Database__SeedOnStartup
+        value: "true"
+      
+      # Add these from your .env.example file:
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: hackathon-db
+          property: connectionString
+      - key: Email__SmtpServer
+        sync: false
+      - key: Email__SmtpPort
+        value: "587"
+      - key: Email__SmtpUsername
+        sync: false
+      - key: Email__SmtpPassword
+        sync: false
+      - key: Email__FromAddress
+        value: noreply@blackbaud-hackathon.com
+      - key: Email__FromName
+        value: Blackbaud Off the Grid Hackathon
+      - key: Jwt__SecretKey
+        sync: false
+      - key: Jwt__Issuer
+        value: HackathonPlatform
+      - key: Jwt__Audience
+        value: HackathonPlatformClient
+      - key: Jwt__ExpirationMinutes
+        value: "60"
+      - key: BlackbaudAuth__ClientId
+        sync: false
+      - key: BlackbaudAuth__ClientSecret
+        sync: false
+      - key: BlackbaudAuth__AuthorizationEndpoint
+        value: https://app.blackbaud.com/oauth/authorize
+      - key: BlackbaudAuth__TokenEndpoint
+        value: https://oauth2.sky.blackbaud.com/token
+      - key: BlackbaudAuth__RedirectUri
+        value: https://your-render-app.onrender.com/api/auth/callback
+      - key: BlackbaudAuth__SasApiKey
+        sync: false
+      - key: Cors__AllowedOrigins__0
+        value: https://your-frontend-url.onrender.com
+      - key: FileUpload__MaxFileSizeMb
+        value: "10"
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Port configuration
+    ports:
+      - number: 5000
+        protocol: HTTP
+    
+    # Build command (optional, Dockerfile handles this)
+    # buildCommand: dotnet build --configuration Release
+    
+    # Autoscaling (available on higher plans)
+    # autoscaling:
+    #   enabled: true
+    #   minInstances: 1
+    #   maxInstances: 3
+    #   targetCpuUtilization: 70
+    #   targetMemoryUtilization: 80
+
+  # Optional: PostgreSQL database (recommended over local SQLite)
+  # If using Render's managed database:
+  - type: pserv
+    name: hackathon-db
+    ipAllowList: []
+    plan: starter
+    region: oregon
+    dbName: hackathon_platform
+    user: postgres
+    postgresMajorVersion: "15"
+    # Initialize database with migrations as needed
