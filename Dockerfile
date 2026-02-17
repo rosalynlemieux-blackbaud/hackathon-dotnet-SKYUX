@@ -3,20 +3,20 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
-COPY ["backend/Blackbaud.Hackathon.Platform.sln", "backend/"]
+# Copy only source projects (skip test projects for production build)
 COPY ["backend/src/", "backend/src/"]
-COPY ["backend/test/", "backend/test/"]
 
-# Restore dependencies
-RUN dotnet restore "backend/Blackbaud.Hackathon.Platform.sln"
+# Restore dependencies for production projects only
+RUN dotnet restore "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.Hackathon.Platform.Service.csproj"
+RUN dotnet restore "backend/src/Blackbaud.Hackathon.Platform.Shared/Blackbaud.Hackathon.Platform.Shared.csproj"
+RUN dotnet restore "backend/src/Blackbaud.Hackathon.Platform.Extensions/Blackbaud.Hackathon.Platform.Extensions.csproj"
 
-# Build the solution
-RUN dotnet build "backend/Blackbaud.Hackathon.Platform.sln" -c Release -o /app/build
+# Build production projects
+RUN dotnet build "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.Hackathon.Platform.Service.csproj" -c Release -o /app/build --no-restore
 
-# Publish stage
+# Publish stage - publish just the Service project
 FROM build AS publish
-RUN dotnet publish "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.Hackathon.Platform.Service.csproj" -c Release -o /app/publish
+RUN dotnet publish "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.Hackathon.Platform.Service.csproj" -c Release -o /app/publish --no-build
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
