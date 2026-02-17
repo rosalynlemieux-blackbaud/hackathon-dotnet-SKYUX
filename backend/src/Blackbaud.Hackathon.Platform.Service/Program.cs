@@ -128,7 +128,8 @@ builder.Services.AddHsts(options =>
 });
 
 var app = builder.Build();
-Database Initialization and Seeding
+
+// Database Initialization and Seeding
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -148,15 +149,10 @@ using (var scope = app.Services.CreateScope())
         {
             logger.LogInformation("Database seeding is enabled. Starting seed process...");
             var seeder = services.GetRequiredService<DbSeeder>();
-// Performance middleware (order matters!)
-app.UseResponseCompression();
-
-app.UseHttpsRedirection();
-
-app.UseCors("AllowAngularApp");
-
-// Cache invalidation middleware
-app.UseMiddleware<CacheInvalidationMiddleware>(
+            await seeder.SeedAsync();
+            logger.LogInformation("Database seeding completed successfully.");
+        }
+        else
         {
             logger.LogInformation("Database seeding is disabled. Set 'Database:SeedOnStartup' to true to enable.");
         }
