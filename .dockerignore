@@ -57,3 +57,4 @@ frontend/build/
 # Misc
 *.log
 launchSettings.json
+# Docker build timestamp: Tue Feb 17 16:42:29 EST 2026
