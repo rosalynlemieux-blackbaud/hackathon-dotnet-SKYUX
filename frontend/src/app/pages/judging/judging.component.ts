@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { IdeaService } from '../../services/idea.service';
 import { RatingService } from '../../services/rating.service';
+import { NotificationService } from '../../services/notification.service';
 import { HackathonService } from '../../services/hackathon.service';
 
 interface IdeaWithRating {
@@ -471,6 +472,8 @@ export class JudgingComponent implements OnInit, OnDestroy {
   judgingCriteria: any[] = [];
   statusFilter = '';
   sortBy = 'score-desc';
+  onlineJudges: any[] = [];
+  currentHackathonId = 0;
 
   totalIdeasForJudging = 0;
   completedCount = 0;
@@ -483,22 +486,84 @@ export class JudgingComponent implements OnInit, OnDestroy {
   constructor(
     private ideaService: IdeaService,
     private ratingService: RatingService,
+    private notificationService: NotificationService,
     private hackathonService: HackathonService
   ) {}
 
   ngOnInit(): void {
     this.loadJudgingData();
+    this.setupRealtimeUpdates();
   }
 
   ngOnDestroy(): void {
+    // Leave judging session when component is destroyed
+    if (this.currentHackathonId) {
+      this.notificationService.leaveJudging(this.currentHackathonId).catch(err => {
+        console.error('Failed to leave judging:', err);
+      });
+    }
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  setupRealtimeUpdates(): void {
+    //Subscribe to judge presence changes
+    this.notificationService.judgeOnline$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        // Refresh online judges list
+        if (this.currentHackathonId) {
+          this.notificationService.getOnlineJudges(this.currentHackathonId).catch(err => {
+            console.error('Failed to get online judges:', err);
+          });
+        }
+      });
+
+    this.notificationService.judgeOffline$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        // Refresh online judges list
+        if (this.currentHackathonId) {
+          this.notificationService.getOnlineJudges(this.currentHackathonId).catch(err => {
+            console.error('Failed to get online judges:', err);
+          });
+        }
+      });
+
+    // Subscribe to online judges list updates
+    this.notificationService.onlineJudges$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(judges => {
+        this.onlineJudges = judges;
+      });
+
+    // Subscribe to rating submissions
+    this.notificationService.ratingSubmitted$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        // Refresh ideas loading to show updated scores
+        if (this.currentHackathonId) {
+          this.loadIdeasForJudging(this.currentHackathonId);
+        }
+      });
   }
 
   loadJudgingData(): void {
     this.hackathonService.getCurrentHackathon()
       .pipe(takeUntil(this.destroy$))
       .subscribe(hackathon => {
+        this.currentHackathonId = hackathon.id;
+
+        // Join judging session for real-time updates
+        this.notificationService.joinJudging(hackathon.id).catch(err => {
+          console.error('Failed to join judging session:', err);
+        });
+
+        // Get online judges
+        this.notificationService.getOnlineJudges(hackathon.id).catch(err => {
+          console.error('Failed to get online judges:', err);
+        });
+
         // Set default judging criteria
         this.judgingCriteria = hackathon.judgingCriteria || [
           { id: 1, name: 'Innovation', weight: 0.3 },

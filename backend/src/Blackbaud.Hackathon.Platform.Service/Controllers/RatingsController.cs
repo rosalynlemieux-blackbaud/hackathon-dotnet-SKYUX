@@ -1,5 +1,6 @@
 using Blackbaud.Hackathon.Platform.Shared.DataAccess;
 using Blackbaud.Hackathon.Platform.Shared.Models;
+using Blackbaud.Hackathon.Platform.Service.BusinessLogic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,16 @@ public class RatingsController : ControllerBase
 {
     private readonly HackathonDbContext _context;
     private readonly ILogger<RatingsController> _logger;
+    private readonly INotificationService _notificationService;
 
-    public RatingsController(HackathonDbContext context, ILogger<RatingsController> logger)
+    public RatingsController(
+        HackathonDbContext context, 
+        ILogger<RatingsController> logger,
+        INotificationService notificationService)
     {
         _context = context;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     /// <summary>
@@ -106,6 +112,19 @@ public class RatingsController : ControllerBase
             existingRating.UpdatedAt = DateTime.UtcNow;
             _context.Ratings.Update(existingRating);
             await _context.SaveChangesAsync();
+
+            // Notify about rating update
+            var judge = await _context.Users.FindAsync(judgeId);
+            await _notificationService.NotifyRatingSubmitted(idea.HackathonId, request.IdeaId, new
+            {
+                id = existingRating.Id,
+                score = existingRating.Score,
+                feedback = existingRating.Feedback,
+                judgeEmail = judge?.Email,
+                criterionId = request.CriterionId,
+                updatedAt = existingRating.UpdatedAt
+            });
+
             return Ok(existingRating);
         }
 
@@ -122,6 +141,18 @@ public class RatingsController : ControllerBase
 
         _context.Ratings.Add(rating);
         await _context.SaveChangesAsync();
+
+        // Notify about new rating
+        var judgeUser = await _context.Users.FindAsync(judgeId);
+        await _notificationService.NotifyRatingSubmitted(idea.HackathonId, request.IdeaId, new
+        {
+            id = rating.Id,
+            score = rating.Score,
+            feedback = rating.Feedback,
+            judgeEmail = judgeUser?.Email,
+            criterionId = request.CriterionId,
+            createdAt = rating.CreatedAt
+        });
 
         return CreatedAtAction(nameof(GetRating), new { id = rating.Id }, rating);
     }

@@ -26,6 +26,10 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Add SignalR for real-time notifications
+builder.Services.AddSignalR();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -89,5 +93,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR NotificationHub
+app.MapHub<Blackbaud.Hackathon.Platform.Service.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();

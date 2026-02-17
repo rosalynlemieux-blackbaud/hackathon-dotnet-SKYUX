@@ -1,5 +1,6 @@
 using Blackbaud.Hackathon.Platform.Shared.DataAccess;
 using Blackbaud.Hackathon.Platform.Shared.Models;
+using Blackbaud.Hackathon.Platform.Service.BusinessLogic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,16 @@ public class IdeasController : ControllerBase
 {
     private readonly HackathonDbContext _context;
     private readonly ILogger<IdeasController> _logger;
+    private readonly INotificationService _notificationService;
 
-    public IdeasController(HackathonDbContext context, ILogger<IdeasController> logger)
+    public IdeasController(
+        HackathonDbContext context, 
+        ILogger<IdeasController> logger,
+        INotificationService notificationService)
     {
         _context = context;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     /// <summary>
@@ -99,6 +105,16 @@ public class IdeasController : ControllerBase
         _context.Ideas.Add(idea);
         await _context.SaveChangesAsync();
 
+        // Notify about new idea creation
+        await _notificationService.NotifyIdeaSubmitted(idea.HackathonId, new
+        {
+            id = idea.Id,
+            title = idea.Title,
+            description = idea.Description,
+            status = idea.Status,
+            createdAt = idea.CreatedAt
+        });
+
         return CreatedAtAction(nameof(GetIdea), new { id = idea.Id }, idea);
     }
 
@@ -177,6 +193,16 @@ public class IdeasController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        // Notify about status change
+        await _notificationService.NotifyIdeaStatusChanged(idea.HackathonId, idea.Id, "submitted");
+        await _notificationService.NotifyIdeaSubmitted(idea.HackathonId, new
+        {
+            id = idea.Id,
+            title = idea.Title,
+            status = idea.Status,
+            submittedAt = idea.SubmittedAt
+        });
+
         return Ok(idea);
     }
 
@@ -203,8 +229,12 @@ public class IdeasController : ControllerBase
             return Forbid();
         }
 
+        var hackathonId = idea.HackathonId;
         _context.Ideas.Remove(idea);
         await _context.SaveChangesAsync();
+
+        // Notify about deletion
+        await _notificationService.NotifyIdeaDeleted(hackathonId, id);
 
         return NoContent();
     }

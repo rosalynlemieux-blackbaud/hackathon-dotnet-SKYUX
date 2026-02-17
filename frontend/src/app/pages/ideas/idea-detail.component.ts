@@ -6,6 +6,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { IdeaService } from '../../services/idea.service';
 import { CommentService } from '../../services/comment.service';
 import { RatingService } from '../../services/rating.service';
+import { NotificationService } from '../../services/notification.service';
 import { AuthService } from '../../services/auth.service';
 import { Idea } from '../../models/models';
 
@@ -586,6 +587,7 @@ export class IdeaDetailComponent implements OnInit, OnDestroy {
     private ideaService: IdeaService,
     private commentService: CommentService,
     private ratingService: RatingService,
+    private notificationService: NotificationService,
     private authService: AuthService
   ) {}
 
@@ -597,11 +599,57 @@ export class IdeaDetailComponent implements OnInit, OnDestroy {
     this.route.params
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
-        this.loadIdea(parseInt(params['id']));
+        const ideaId = parseInt(params['id']);
+        this.loadIdea(ideaId);
+        this.setupRealtimeNotifications(ideaId);
+      });
+  }
+
+  setupRealtimeNotifications(ideaId: number): void {
+    // Watch this specific idea for updates
+    this.notificationService.watchIdea(ideaId).catch(err => {
+      console.error('Failed to watch idea:', err);
+    });
+
+    // Subscribe to new comments
+    this.notificationService.commentAdded$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        if (data.ideaId === ideaId) {
+          // Add new comment to the list
+          const newComment = {
+            id: data.comment.id,
+            content: data.comment.content,
+            userId: data.comment.authorId,
+            userName: data.comment.authorName,
+            createdAt: data.comment.createdAt,
+            parentCommentId: data.comment.parentCommentId,
+            isDeleted: false
+          };
+          
+          this.comments.push(newComment);
+          this.buildCommentThreads(this.comments);
+        }
+      });
+
+    // Subscribe to rating updates
+    this.notificationService.ratingSubmitted$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        if (data.ideaId === ideaId) {
+          // Refresh ratings
+          this.loadRatings(ideaId);
+        }
       });
   }
 
   ngOnDestroy(): void {
+    // Stop watching idea when leaving
+    if (this.idea?.id) {
+      this.notificationService.unwatchIdea(this.idea.id).catch(err => {
+        console.error('Failed to unwatch idea:', err);
+      });
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }

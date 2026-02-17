@@ -2,12 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './services/auth.service';
+import { NotificationService } from './services/notification.service';
+import { NotificationsComponent } from './components/notifications/notifications.component';
 import { User } from './models/models';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet, NotificationsComponent],
   template: `
     <div class="app-container">
       <!-- Header -->
@@ -49,6 +51,9 @@ import { User } from './models/models';
       <main class="app-main">
         <router-outlet></router-outlet>
       </main>
+
+      <!-- Notifications -->
+      <app-notifications></app-notifications>
 
       <!-- Footer -->
       <footer class="app-footer">
@@ -279,10 +284,17 @@ export class AppComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    // Initialize notifications
+    this.notificationService.start().catch(err => {
+      console.error('Failed to start notifications:', err);
+    });
+
+    // Subscribe to auth changes
     this.authService.currentUser.subscribe(user => {
       this.currentUser = user;
       this.isAdmin = this.authService.isAdmin();

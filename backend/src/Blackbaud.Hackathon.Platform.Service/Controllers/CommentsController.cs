@@ -1,5 +1,6 @@
 using Blackbaud.Hackathon.Platform.Shared.DataAccess;
 using Blackbaud.Hackathon.Platform.Shared.Models;
+using Blackbaud.Hackathon.Platform.Service.BusinessLogic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,16 @@ public class CommentsController : ControllerBase
 {
     private readonly HackathonDbContext _context;
     private readonly ILogger<CommentsController> _logger;
+    private readonly INotificationService _notificationService;
 
-    public CommentsController(HackathonDbContext context, ILogger<CommentsController> logger)
+    public CommentsController(
+        HackathonDbContext context, 
+        ILogger<CommentsController> logger,
+        INotificationService notificationService)
     {
         _context = context;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     /// <summary>
@@ -90,6 +96,20 @@ public class CommentsController : ControllerBase
 
         _context.Comments.Add(comment);
         await _context.SaveChangesAsync();
+
+        // Load user info for notification
+        var user = await _context.Users.FindAsync(userId);
+
+        // Notify about comment
+        await _notificationService.NotifyCommentAdded(idea.HackathonId, idea.Id, new
+        {
+            id = comment.Id,
+            content = comment.Content,
+            authorId = userId,
+            authorName = user != null ? $"{user.FirstName} {user.LastName}" : "Anonymous",
+            createdAt = comment.CreatedAt,
+            parentCommentId = comment.ParentCommentId
+        });
 
         return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, comment);
     }
