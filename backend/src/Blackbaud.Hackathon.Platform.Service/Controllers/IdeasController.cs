@@ -15,15 +15,18 @@ public class IdeasController : ControllerBase
     private readonly HackathonDbContext _context;
     private readonly ILogger<IdeasController> _logger;
     private readonly INotificationService _notificationService;
+    private readonly IEmailService _emailService;
 
     public IdeasController(
         HackathonDbContext context, 
         ILogger<IdeasController> logger,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IEmailService emailService)
     {
         _context = context;
         _logger = logger;
         _notificationService = notificationService;
+        _emailService = emailService;
     }
 
     /// <summary>
@@ -174,6 +177,7 @@ public class IdeasController : ControllerBase
         var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
         var idea = await _context.Ideas
             .Include(i => i.Team)
+            .Include(i => i.SubmittedByUser)
             .FirstOrDefaultAsync(i => i.Id == id);
 
         if (idea == null)
@@ -202,6 +206,17 @@ public class IdeasController : ControllerBase
             status = idea.Status,
             submittedAt = idea.SubmittedAt
         });
+
+        // Send submission confirmation email
+        if (idea.SubmittedByUser?.Email != null)
+        {
+            var ideaLink = $"https://hackathon.example.com/ideas/{idea.Id}";
+            await _emailService.SendIdeaSubmissionEmailAsync(
+                idea.SubmittedByUser.Email,
+                idea.Title,
+                ideaLink
+            );
+        }
 
         return Ok(idea);
     }

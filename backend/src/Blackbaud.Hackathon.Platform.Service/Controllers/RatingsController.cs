@@ -15,15 +15,18 @@ public class RatingsController : ControllerBase
     private readonly HackathonDbContext _context;
     private readonly ILogger<RatingsController> _logger;
     private readonly INotificationService _notificationService;
+    private readonly IEmailService _emailService;
 
     public RatingsController(
         HackathonDbContext context, 
         ILogger<RatingsController> logger,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IEmailService emailService)
     {
         _context = context;
         _logger = logger;
         _notificationService = notificationService;
+        _emailService = emailService;
     }
 
     /// <summary>
@@ -85,7 +88,9 @@ public class RatingsController : ControllerBase
         var judgeId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
         // Check if idea exists
-        var idea = await _context.Ideas.FindAsync(request.IdeaId);
+        var idea = await _context.Ideas
+            .Include(i => i.SubmittedByUser)
+            .FirstOrDefaultAsync(i => i.Id == request.IdeaId);
         if (idea == null)
         {
             return BadRequest("Idea not found");
@@ -125,6 +130,18 @@ public class RatingsController : ControllerBase
                 updatedAt = existingRating.UpdatedAt
             });
 
+            // Send email to idea author
+            if (idea.SubmittedByUser?.Email != null)
+            {
+                var ideaLink = $"https://hackathon.example.com/ideas/{idea.Id}";
+                await _emailService.SendRatingNotificationEmailAsync(
+                    idea.SubmittedByUser.Email,
+                    idea.Title,
+                    existingRating.Score,
+                    ideaLink
+                );
+            }
+
             return Ok(existingRating);
         }
 
@@ -153,6 +170,18 @@ public class RatingsController : ControllerBase
             criterionId = request.CriterionId,
             createdAt = rating.CreatedAt
         });
+
+        // Send email to idea author
+        if (idea.SubmittedByUser?.Email != null)
+        {
+            var ideaLink = $"https://hackathon.example.com/ideas/{idea.Id}";
+            await _emailService.SendRatingNotificationEmailAsync(
+                idea.SubmittedByUser.Email,
+                idea.Title,
+                rating.Score,
+                ideaLink
+            );
+        }
 
         return CreatedAtAction(nameof(GetRating), new { id = rating.Id }, rating);
     }

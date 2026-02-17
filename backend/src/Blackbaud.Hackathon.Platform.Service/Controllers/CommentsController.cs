@@ -15,15 +15,18 @@ public class CommentsController : ControllerBase
     private readonly HackathonDbContext _context;
     private readonly ILogger<CommentsController> _logger;
     private readonly INotificationService _notificationService;
+    private readonly IEmailService _emailService;
 
     public CommentsController(
         HackathonDbContext context, 
         ILogger<CommentsController> logger,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IEmailService emailService)
     {
         _context = context;
         _logger = logger;
         _notificationService = notificationService;
+        _emailService = emailService;
     }
 
     /// <summary>
@@ -76,7 +79,9 @@ public class CommentsController : ControllerBase
         }
 
         // Check if idea exists
-        var idea = await _context.Ideas.FindAsync(request.IdeaId);
+        var idea = await _context.Ideas
+            .Include(i => i.SubmittedByUser)
+            .FirstOrDefaultAsync(i => i.Id == request.IdeaId);
         if (idea == null)
         {
             return BadRequest("Idea not found");
@@ -110,6 +115,20 @@ public class CommentsController : ControllerBase
             createdAt = comment.CreatedAt,
             parentCommentId = comment.ParentCommentId
         });
+
+        // Send email notification to idea author
+        if (idea.SubmittedByUser?.Email != null && idea.SubmittedBy != userId)
+        {
+            var commentPreview = comment.Content.Length > 100 ? comment.Content.Substring(0, 100) + "..." : comment.Content;
+            var ideaLink = $"https://hackathon.example.com/ideas/{idea.Id}";
+            await _emailService.SendCommentNotificationEmailAsync(
+                idea.SubmittedByUser.Email,
+                idea.Title,
+                user != null ? $"{user.FirstName} {user.LastName}" : "A user",
+                commentPreview,
+                ideaLink
+            );
+        }
 
         return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, comment);
     }
