@@ -1,9 +1,13 @@
+using Blackbaud.Hackathon.Platform.Service.Attributes;
 using Blackbaud.Hackathon.Platform.Service.DataAccess;
+using Blackbaud.Hackathon.Platform.Service.Infrastructure;
 using Blackbaud.Hackathon.Platform.Shared.BusinessLogic;
 using Blackbaud.Hackathon.Platform.Shared.DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.IO.Compression;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +38,29 @@ builder.Services.AddScoped<DbSeeder>();
 
 // Add SignalR for real-time notifications
 builder.Services.AddSignalR();
+
+//Performance Optimizations - Caching
+builder.Services.AddMemoryCache();
+builder.Services.AddDistributedMemoryCache(); // In production, use Redis: AddStackExchangeRedisCache
+builder.Services.AddScoped<ICacheService, CacheService>();
+
+// Performance Optimizations - Response Compression
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
+
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.SmallestSize;
+});
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -101,9 +128,15 @@ using (var scope = app.Services.CreateScope())
         {
             logger.LogInformation("Database seeding is enabled. Starting seed process...");
             var seeder = services.GetRequiredService<DbSeeder>();
-            await seeder.SeedAsync();
-        }
-        else
+// Performance middleware (order matters!)
+app.UseResponseCompression();
+
+app.UseHttpsRedirection();
+
+app.UseCors("AllowAngularApp");
+
+// Cache invalidation middleware
+app.UseMiddleware<CacheInvalidationMiddleware>(
         {
             logger.LogInformation("Database seeding is disabled. Set 'Database:SeedOnStartup' to true to enable.");
         }
