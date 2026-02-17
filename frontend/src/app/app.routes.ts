@@ -20,19 +20,29 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/ideas/ideas.component').then(m => m.IdeasComponent)
   },
   {
-    path: 'ideas/:id',
-    canActivate: [AuthGuard],
-    loadComponent: () => import('./pages/idea-detail/idea-detail.component').then(m => m.IdeaDetailComponent)
-  },
-  {
     path: 'ideas/new',
     canActivate: [AuthGuard],
-    loadComponent: () => import('./pages/idea-form/idea-form.component').then(m => m.IdeaFormComponent)
+    loadComponent: () => import('./pages/ideas/idea-form.component').then(m => m.IdeaFormComponent)
+  },
+  {
+    path: 'ideas/:id',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./pages/ideas/idea-detail.component').then(m => m.IdeaDetailComponent)
+  },
+  {
+    path: 'ideas/:id/edit',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./pages/ideas/idea-form.component').then(m => m.IdeaFormComponent)
   },
   {
     path: 'teams',
     canActivate: [AuthGuard],
     loadComponent: () => import('./pages/teams/teams.component').then(m => m.TeamsComponent)
+  },
+  {
+    path: 'teams/:id',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./pages/teams/team-detail.component').then(m => m.TeamDetailComponent)
   },
   {
     path: 'judging',
