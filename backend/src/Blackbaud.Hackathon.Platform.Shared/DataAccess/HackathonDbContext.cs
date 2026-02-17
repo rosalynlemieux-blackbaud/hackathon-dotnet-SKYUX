@@ -1,5 +1,6 @@
 using Blackbaud.Hackathon.Platform.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using HackathonModel = Blackbaud.Hackathon.Platform.Shared.Models.Hackathon;
 
 namespace Blackbaud.Hackathon.Platform.Shared.DataAccess;
 
@@ -11,7 +12,7 @@ public class HackathonDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
-    public DbSet<Hackathon> Hackathons { get; set; }
+    public DbSet<HackathonModel> Hackathons { get; set; }
     public DbSet<Track> Tracks { get; set; }
     public DbSet<Award> Awards { get; set; }
     public DbSet<JudgingCriterion> JudgingCriteria { get; set; }

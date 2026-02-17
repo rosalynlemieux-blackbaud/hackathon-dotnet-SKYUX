@@ -1,6 +1,7 @@
 using Blackbaud.Hackathon.Platform.Shared.DataAccess;
 using Blackbaud.Hackathon.Platform.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Blackbaud.Hackathon.Platform.Shared.BusinessLogic;
 
