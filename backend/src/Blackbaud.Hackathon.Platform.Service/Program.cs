@@ -1,3 +1,4 @@
+using Blackbaud.Hackathon.Platform.Service.DataAccess;
 using Blackbaud.Hackathon.Platform.Shared.BusinessLogic;
 using Blackbaud.Hackathon.Platform.Shared.DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -29,6 +30,7 @@ builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<DbSeeder>();
 
 // Add SignalR for real-time notifications
 builder.Services.AddSignalR();
@@ -79,7 +81,42 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+Database Initialization and Seeding
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<HackathonDbContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        
+        // Apply any pending migrations
+        logger.LogInformation("Applying database migrations...");
+        await context.Database.MigrateAsync();
+        logger.LogInformation("Database migrations applied successfully.");
+        
+        // Seed database if enabled in configuration
+        var seedDatabase = builder.Configuration.GetValue<bool>("Database:SeedOnStartup", false);
+        if (seedDatabase)
+        {
+            logger.LogInformation("Database seeding is enabled. Starting seed process...");
+            var seeder = services.GetRequiredService<DbSeeder>();
+            await seeder.SeedAsync();
+        }
+        else
+        {
+            logger.LogInformation("Database seeding is disabled. Set 'Database:SeedOnStartup' to true to enable.");
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while initializing the database.");
+        throw;
+    }
+}
 
+// 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
