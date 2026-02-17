@@ -1,9 +1,12 @@
 using Blackbaud.Hackathon.Platform.Service.Attributes;
 using Blackbaud.Hackathon.Platform.Service.DataAccess;
+using Blackbaud.Hackathon.Platform.Service.HealthChecks;
 using Blackbaud.Hackathon.Platform.Service.Infrastructure;
+using Blackbaud.Hackathon.Platform.Service.Middleware;
 using Blackbaud.Hackathon.Platform.Shared.BusinessLogic;
 using Blackbaud.Hackathon.Platform.Shared.DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -107,6 +110,23 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("admin"));
 });
 
+// Production Hardening - Health Checks
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database")
+    .AddCheck<MemoryHealthCheck>("memory")
+    .AddCheck<ExternalServiceHealthCheck>("external_services");
+
+// Add HTTP client factory for health checks
+builder.Services.AddHttpClient();
+
+// Configure HSTS for production
+builder.Services.AddHsts(options =>
+{
+    options.Preload = true;
+    options.IncludeSubDomains = true;
+    options.MaxAge = TimeSpan.FromDays(365);
+});
+
 var app = builder.Build();
 Database Initialization and Seeding
 using (var scope = app.Services.CreateScope())
@@ -149,6 +169,10 @@ app.UseMiddleware<CacheInvalidationMiddleware>(
     }
 }
 
+// Production middleware for error handling
+app.UseExceptionHandler("/error");
+app.UseStatusCodePages();
+
 // 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
@@ -165,6 +189,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map health checks endpoint
+app.MapHealthChecks("/health");
 
 // Map SignalR NotificationHub
 app.MapHub<Blackbaud.Hackathon.Platform.Service.Hubs.NotificationHub>("/hubs/notifications");
