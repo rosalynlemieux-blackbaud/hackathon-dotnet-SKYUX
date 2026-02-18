@@ -18,9 +18,34 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure Database
+// Configure Database - Convert PostgreSQL URL to connection string
+var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string? finalConnectionString = rawConnectionString;
+
+if (!string.IsNullOrEmpty(rawConnectionString) && rawConnectionString.StartsWith("postgresql://"))
+{
+    try
+    {
+        // Parse postgresql://user:password@host:port/database format
+        var uri = new Uri(rawConnectionString);
+        var userInfo = uri.UserInfo.Split(':');
+        var host = uri.Host;
+        var port = uri.Port > 0 ? uri.Port : 5432;
+        var database = uri.AbsolutePath.TrimStart('/');
+        var username = userInfo[0];
+        var password = userInfo.Length > 1 ? userInfo[1] : "";
+
+        finalConnectionString = $"Host={host};Port={port};Username={username};Password={password};Database={database};SSL Mode=Require;Trust Server Certificate=false;";
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Failed to parse PostgreSQL connection string: {ex.Message}");
+        finalConnectionString = rawConnectionString;
+    }
+}
+
 builder.Services.AddDbContext<HackathonDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(finalConnectionString ?? ""));
 
 // Register HttpClient for API calls
 builder.Services.AddHttpClient();
