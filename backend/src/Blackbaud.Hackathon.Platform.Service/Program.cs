@@ -152,7 +152,7 @@ builder.Services.AddHsts(options =>
 
 var app = builder.Build();
 
-// Database Initialization - apply migrations
+// Database Initialization - create schema from models (no migrations exist yet)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -161,10 +161,10 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<HackathonDbContext>();
         var logger = services.GetRequiredService<ILogger<Program>>();
         
-        // Apply any pending migrations
-        logger.LogInformation("Applying database migrations...");
-        await context.Database.MigrateAsync();
-        logger.LogInformation("Database migrations applied successfully.");
+        // Create database schema from current EF models
+        logger.LogInformation("Creating/verifying database schema...");
+        await context.Database.EnsureCreatedAsync();
+        logger.LogInformation("Database schema created successfully.");
     }
     catch (Exception ex)
     {
