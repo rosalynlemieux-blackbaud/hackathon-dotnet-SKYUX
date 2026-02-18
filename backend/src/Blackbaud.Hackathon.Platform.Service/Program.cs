@@ -33,9 +33,9 @@ builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 // Note: NotificationService, EmailService, FileService are in Service.BusinessLogic namespace
-builder.Services.AddScoped<Service.BusinessLogic.INotificationService, Service.BusinessLogic.NotificationService>();
-builder.Services.AddScoped<Service.BusinessLogic.IEmailService, Service.BusinessLogic.EmailService>();
-builder.Services.AddScoped<Service.BusinessLogic.IFileService, Service.BusinessLogic.FileService>();
+builder.Services.AddScoped<Blackbaud.Hackathon.Platform.Service.BusinessLogic.INotificationService, Blackbaud.Hackathon.Platform.Service.BusinessLogic.NotificationService>();
+builder.Services.AddScoped<Blackbaud.Hackathon.Platform.Service.BusinessLogic.IEmailService, Blackbaud.Hackathon.Platform.Service.BusinessLogic.EmailService>();
+builder.Services.AddScoped<Blackbaud.Hackathon.Platform.Service.BusinessLogic.IFileService, Blackbaud.Hackathon.Platform.Service.BusinessLogic.FileService>();
 
 // Add SignalR for real-time notifications
 builder.Services.AddSignalR();
