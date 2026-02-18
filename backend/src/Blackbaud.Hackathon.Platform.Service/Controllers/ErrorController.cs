@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using System.Net;
 
 namespace Blackbaud.Hackathon.Platform.Service.Controllers
