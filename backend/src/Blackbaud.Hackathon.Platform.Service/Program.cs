@@ -160,7 +160,14 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<HackathonDbContext>();
         var logger = services.GetRequiredService<ILogger<Program>>();
-        
+        var resetOnStartup = builder.Configuration.GetValue<bool>("Database:ResetOnStartup");
+
+        if (resetOnStartup)
+        {
+            logger.LogWarning("ResetOnStartup enabled - dropping and recreating database schema.");
+            await context.Database.EnsureDeletedAsync();
+        }
+
         // Create database schema from current EF models
         logger.LogInformation("Creating/verifying database schema...");
         await context.Database.EnsureCreatedAsync();
