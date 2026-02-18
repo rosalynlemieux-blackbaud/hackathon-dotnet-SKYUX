@@ -13,12 +13,12 @@ RUN dotnet restore "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.H
 RUN dotnet restore "backend/src/Blackbaud.Hackathon.Platform.Shared/Blackbaud.Hackathon.Platform.Shared.csproj"
 RUN dotnet restore "backend/src/Blackbaud.Hackathon.Platform.Extensions/Blackbaud.Hackathon.Platform.Extensions.csproj"
 
-# Build production projects
-RUN dotnet build "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.Hackathon.Platform.Service.csproj" -c Release -o /app/build --no-restore
+# Build production projects (no output path - use default bin/Release location)
+RUN dotnet build "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.Hackathon.Platform.Service.csproj" -c Release --no-restore
 
 # Publish stage - publish just the Service project
 FROM build AS publish
-RUN dotnet publish "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.Hackathon.Platform.Service.csproj" -c Release -o /app/publish --no-build
+RUN dotnet publish "backend/src/Blackbaud.Hackathon.Platform.Service/Blackbaud.Hackathon.Platform.Service.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
