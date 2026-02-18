@@ -34,10 +34,10 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IFileService, FileService>();
-builder.Services.AddScoped<DbSeeder>();
+// Note: NotificationService, EmailService, FileService are in Service.BusinessLogic namespace
+builder.Services.AddScoped<Service.BusinessLogic.INotificationService, Service.BusinessLogic.NotificationService>();
+builder.Services.AddScoped<Service.BusinessLogic.IEmailService, Service.BusinessLogic.EmailService>();
+builder.Services.AddScoped<Service.BusinessLogic.IFileService, Service.BusinessLogic.FileService>();
 
 // Add SignalR for real-time notifications
 builder.Services.AddSignalR();
@@ -129,7 +129,7 @@ builder.Services.AddHsts(options =>
 
 var app = builder.Build();
 
-// Database Initialization and Seeding
+// Database Initialization - apply migrations
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -142,20 +142,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Applying database migrations...");
         await context.Database.MigrateAsync();
         logger.LogInformation("Database migrations applied successfully.");
-        
-        // Seed database if enabled in configuration
-        var seedDatabase = builder.Configuration.GetValue<bool>("Database:SeedOnStartup", false);
-        if (seedDatabase)
-        {
-            logger.LogInformation("Database seeding is enabled. Starting seed process...");
-            var seeder = services.GetRequiredService<DbSeeder>();
-            await seeder.SeedAsync();
-            logger.LogInformation("Database seeding completed successfully.");
-        }
-        else
-        {
-            logger.LogInformation("Database seeding is disabled. Set 'Database:SeedOnStartup' to true to enable.");
-        }
     }
     catch (Exception ex)
     {
