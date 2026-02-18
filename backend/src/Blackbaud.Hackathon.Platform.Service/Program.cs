@@ -1,8 +1,6 @@
 using Blackbaud.Hackathon.Platform.Service.Attributes;
-using Blackbaud.Hackathon.Platform.Service.DataAccess;
 using Blackbaud.Hackathon.Platform.Service.HealthChecks;
 using Blackbaud.Hackathon.Platform.Service.Infrastructure;
-using Blackbaud.Hackathon.Platform.Service.Middleware;
 using Blackbaud.Hackathon.Platform.Shared.BusinessLogic;
 using Blackbaud.Hackathon.Platform.Shared.DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
