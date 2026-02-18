@@ -1,6 +1,8 @@
 # Multi-stage Dockerfile for Hackathon Platform (.NET 8.0)
+# Build timestamp: 2026-02-18 14:30 UTC - Force rebuild
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG CACHEBUST=1
 WORKDIR /src
 
 # Copy only source projects (skip test projects for production build)
