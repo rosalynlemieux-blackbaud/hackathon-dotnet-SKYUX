@@ -106,6 +106,7 @@ export interface Idea {
   track?: Track;
   submittedBy: number;
   submittedByUser?: User;
+  author?: User;
   title: string;
   description: string;
   status: 'draft' | 'submitted' | 'under_review' | 'winner';
@@ -116,6 +117,10 @@ export interface Idea {
   technicalDetails?: string;
   ratings?: Rating[];
   comments?: Comment[];
+  awards?: Award[];
+  submission?: {
+    teamId?: number;
+  };
   ideaAwards?: IdeaAward[];
   createdAt: Date;
   submittedAt?: Date;

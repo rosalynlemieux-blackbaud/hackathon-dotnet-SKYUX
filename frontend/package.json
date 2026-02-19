@@ -19,6 +19,7 @@
     "@angular/platform-browser": "^17.0.0",
     "@angular/platform-browser-dynamic": "^17.0.0",
     "@angular/router": "^17.0.0",
+    "@microsoft/signalr": "^8.0.7",
     "@skyux/core": "^8.0.0",
     "@skyux/theme": "^8.0.0",
     "@skyux/forms": "^8.0.0",
