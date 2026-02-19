@@ -44,6 +44,42 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Handles OAuth callback redirect from Blackbaud (GET) and forwards to frontend callback route
+    /// </summary>
+    [HttpGet("callback")]
+    public IActionResult CallbackGet([FromQuery] string? code = null, [FromQuery] string? state = null, [FromQuery] string? error = null)
+    {
+        var frontendCallback =
+            _configuration["BlackbaudAuth:FrontendRedirectUri"]
+            ?? _configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()?.FirstOrDefault()
+            ?? "http://localhost:4200";
+
+        var redirectBase = frontendCallback.TrimEnd('/') + "/auth/callback";
+        var queryParts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(code))
+        {
+            queryParts.Add($"code={Uri.EscapeDataString(code)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(state))
+        {
+            queryParts.Add($"state={Uri.EscapeDataString(state)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            queryParts.Add($"error={Uri.EscapeDataString(error)}");
+        }
+
+        var redirectUrl = queryParts.Count > 0
+            ? $"{redirectBase}?{string.Join("&", queryParts)}"
+            : redirectBase;
+
+        return Redirect(redirectUrl);
+    }
+
+    /// <summary>
     /// Handles OAuth callback from Blackbaud
     /// </summary>
     [HttpPost("callback")]
