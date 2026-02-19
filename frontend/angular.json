@@ -30,8 +30,6 @@
               "src/assets"
             ],
             "styles": [
-              "@skyux/theme/css/sky",
-              "@skyux/theme/css/themes/modern",
               "src/styles.scss"
             ],
             "scripts": []
@@ -92,7 +90,6 @@
               "src/assets"
             ],
             "styles": [
-              "@skyux/theme/css/sky",
               "src/styles.scss"
             ],
             "scripts": []
