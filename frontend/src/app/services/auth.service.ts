@@ -104,6 +104,10 @@ export class AuthService {
     );
   }
 
+  getCurrentUserId(): number | null {
+    return this.currentUserValue?.id ?? null;
+  }
+
   /**
    * Logs out the current user
    */

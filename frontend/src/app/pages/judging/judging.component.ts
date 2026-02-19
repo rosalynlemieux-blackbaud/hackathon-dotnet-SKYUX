@@ -10,7 +10,7 @@ import { HackathonService } from '../../services/hackathon.service';
 
 interface IdeaWithRating {
   idea: any;
-  ratings: { [key: number]: number };
+  ratings: { [key: number]: number | undefined };
   feedback: { [key: number]: string };
   averageScore: number;
   isSubmitted: boolean;
