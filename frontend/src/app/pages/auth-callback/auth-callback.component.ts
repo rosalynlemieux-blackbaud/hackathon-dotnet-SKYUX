@@ -128,9 +128,13 @@ export class AuthCallbackComponent implements OnInit {
       // Handle authentication callback
       this.authService.handleCallback(code, state).subscribe({
         next: (response) => {
-          // Navigate to return URL or home
-          const returnUrl = state && state !== 'null' ? state : '/';
-          this.router.navigate([returnUrl]);
+          // Navigate to a safe in-app return URL or home.
+          // Blackbaud OAuth state may be a GUID token, not a route path.
+          const returnUrl =
+            typeof state === 'string' && state.startsWith('/')
+              ? state
+              : '/';
+          this.router.navigateByUrl(returnUrl);
         },
         error: (err) => {
           this.loading = false;
