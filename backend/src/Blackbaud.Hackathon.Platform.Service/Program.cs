@@ -93,10 +93,29 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
-        policy.WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" })
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        var configuredOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>()?
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Select(origin => origin.Trim().TrimEnd('/'))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray()
+            ?? Array.Empty<string>();
+
+        if (configuredOrigins.Length == 0)
+        {
+            configuredOrigins = new[]
+            {
+                "http://localhost:4200",
+                "https://hackathon-blkb.onrender.com"
+            };
+        }
+
+        policy.SetIsOriginAllowed(origin =>
+                configuredOrigins.Contains(origin.TrimEnd('/'), StringComparer.OrdinalIgnoreCase))
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
