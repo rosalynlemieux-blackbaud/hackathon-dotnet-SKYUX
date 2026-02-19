@@ -165,7 +165,8 @@ using (var scope = app.Services.CreateScope())
         if (resetOnStartup)
         {
             logger.LogWarning("ResetOnStartup enabled - dropping and recreating database schema.");
-            await context.Database.EnsureDeletedAsync();
+            await context.Database.ExecuteSqlRawAsync("DROP SCHEMA IF EXISTS public CASCADE;");
+            await context.Database.ExecuteSqlRawAsync("CREATE SCHEMA IF NOT EXISTS public;");
         }
 
         // Create database schema from current EF models
