@@ -469,31 +469,45 @@ export class IdeaFormComponent implements OnInit, OnDestroy {
       problemStatement: this.form.problemStatement,
       proposedSolution: this.form.proposedSolution,
       successMetrics: this.form.successMetrics,
-      status: 'draft'
+      status: 'draft' as const
     };
 
-    const request = this.isEditMode
-      ? this.ideaService.updateIdea(0, ideaData)
-      : this.ideaService.createIdea(ideaData);
+    if (this.isEditMode) {
+      this.ideaService.updateIdea(0, ideaData)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.isSubmitting = false;
+            this.successMessage = 'Idea updated successfully!';
+            setTimeout(() => {
+              this.router.navigate(['/ideas']);
+            }, 1500);
+          },
+          error: (error: unknown) => {
+            this.isSubmitting = false;
+            this.validationErrors = ['Error saving idea. Please try again.'];
+            console.error('Error:', error);
+          }
+        });
+      return;
+    }
 
-    request
+    this.ideaService.createIdea(ideaData)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(
-        () => {
+      .subscribe({
+        next: () => {
           this.isSubmitting = false;
-          this.successMessage = this.isEditMode
-            ? 'Idea updated successfully!'
-            : 'Idea saved as draft!';
+          this.successMessage = 'Idea saved as draft!';
           setTimeout(() => {
             this.router.navigate(['/ideas']);
           }, 1500);
         },
-        error => {
+        error: (error: unknown) => {
           this.isSubmitting = false;
           this.validationErrors = ['Error saving idea. Please try again.'];
           console.error('Error:', error);
         }
-      );
+      });
   }
 
   validateForm(): boolean {

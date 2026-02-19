@@ -109,6 +109,12 @@ export interface Idea {
   author?: User;
   title: string;
   description: string;
+  problemStatement?: string;
+  proposedSolution?: string;
+  successMetrics?: string;
+  technologies?: string;
+  resourcesNeeded?: string;
+  timeline?: string;
   status: 'draft' | 'submitted' | 'under_review' | 'winner';
   imageUrl?: string;
   demoUrl?: string;

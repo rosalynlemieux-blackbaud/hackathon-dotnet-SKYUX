@@ -630,7 +630,7 @@ export class JudgingComponent implements OnInit, OnDestroy {
   submitRatings(item: IdeaWithRating): void {
     // Submit each rating
     const ratings = Object.entries(item.ratings)
-      .filter(([, score]) => score !== undefined)
+      .filter((entry): entry is [string, number] => entry[1] !== undefined)
       .map(([criterionId, score]) => ({
         ideaId: item.idea.id,
         criterionId: parseInt(criterionId),
