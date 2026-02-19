@@ -289,6 +289,25 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const params = new URLSearchParams(window.location.search);
+    const isAuthCallback = params.get('auth_callback') === '1';
+    const code = params.get('code');
+    const state = params.get('state');
+    const error = params.get('error');
+
+    if (isAuthCallback && (code || error) && window.location.pathname === '/')
+    {
+      this.router.navigate(['/auth/callback'], {
+        queryParams: {
+          ...(code ? { code } : {}),
+          ...(state ? { state } : {}),
+          ...(error ? { error } : {})
+        },
+        replaceUrl: true
+      });
+      return;
+    }
+
     // Initialize notifications
     this.notificationService.start().catch(err => {
       console.error('Failed to start notifications:', err);
