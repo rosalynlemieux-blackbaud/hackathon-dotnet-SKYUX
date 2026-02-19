@@ -439,8 +439,8 @@ export class IdeaFormComponent implements OnInit, OnDestroy {
         this.form = {
           title: idea.title,
           description: idea.description,
-          trackId: idea.trackId,
-          teamId: idea.submission?.teamId || '',
+          trackId: String(idea.trackId ?? ''),
+          teamId: String(idea.submission?.teamId ?? ''),
           problemStatement: idea.problemStatement || '',
           proposedSolution: idea.proposedSolution || '',
           successMetrics: idea.successMetrics || '',

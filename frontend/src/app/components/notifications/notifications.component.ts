@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NotificationService, Notification } from '../services/notification.service';
+import { NotificationService } from '../../services/notification.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -165,11 +165,10 @@ import { takeUntil } from 'rxjs/operators';
   `]
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
-  notifications$;
+  notifications$ = this.notificationService.notifications$;
   private destroy$ = new Subject<void>();
 
   constructor(private notificationService: NotificationService) {
-    this.notifications$ = this.notificationService.notifications$;
   }
 
   ngOnInit(): void {
