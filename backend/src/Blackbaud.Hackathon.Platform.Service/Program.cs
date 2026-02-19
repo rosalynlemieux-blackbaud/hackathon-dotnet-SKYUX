@@ -206,6 +206,14 @@ app.UseCors("AllowAngularApp");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "Hackathon Platform API",
+    status = "running",
+    health = "/health",
+    api = "/api/hackathons"
+}));
+
 app.MapControllers();
 
 // Map health checks endpoint
