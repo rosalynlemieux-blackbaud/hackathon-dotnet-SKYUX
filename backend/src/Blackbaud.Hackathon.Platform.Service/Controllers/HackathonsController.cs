@@ -91,7 +91,35 @@ public class HackathonsController : ControllerBase
 
         if (hackathon == null)
         {
-            return NotFound(new { message = "No active or upcoming hackathon found" });
+            _logger.LogWarning("No active/upcoming hackathon found. Creating a default hackathon for initial setup.");
+
+            var defaultHackathon = new Shared.Models.Hackathon
+            {
+                Name = "Off the Grid 2026",
+                Description = "Default hackathon created during initial deployment setup.",
+                Status = "active",
+                RegistrationStart = now.AddDays(-7),
+                RegistrationEnd = now.AddDays(7),
+                StartDate = now.AddDays(-1),
+                EndDate = now.AddDays(30),
+                JudgingStart = now.AddDays(25),
+                JudgingEnd = now.AddDays(29),
+                WinnersAnnouncement = now.AddDays(30),
+                MaxTeamSize = 5,
+                AllowLateSubmissions = true,
+                IsPublic = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Hackathons.Add(defaultHackathon);
+            await _context.SaveChangesAsync();
+
+            hackathon = await _context.Hackathons
+                .Include(h => h.Tracks)
+                .Include(h => h.Awards)
+                .Include(h => h.JudgingCriteria)
+                .Include(h => h.Milestones)
+                .FirstOrDefaultAsync(h => h.Id == defaultHackathon.Id);
         }
 
         return Ok(hackathon);
