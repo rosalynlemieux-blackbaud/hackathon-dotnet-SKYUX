@@ -68,7 +68,7 @@ export class NotificationService implements OnDestroy {
         console.log('SignalR connected');
         this.isConnected$.next(true);
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('SignalR connection error:', err);
         this.isConnected$.next(false);
         return Promise.reject(err);
@@ -83,7 +83,7 @@ export class NotificationService implements OnDestroy {
       .then(() => {
         this.isConnected$.next(false);
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('SignalR stop error:', err);
         return Promise.reject(err);
       });
@@ -94,7 +94,7 @@ export class NotificationService implements OnDestroy {
    */
   joinHackathon(hackathonId: number): Promise<void> {
     return this.hubConnection.invoke('JoinHackathon', hackathonId)
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('Failed to join hackathon group:', err);
         return Promise.reject(err);
       });
@@ -105,7 +105,7 @@ export class NotificationService implements OnDestroy {
    */
   leaveHackathon(hackathonId: number): Promise<void> {
     return this.hubConnection.invoke('LeaveHackathon', hackathonId)
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('Failed to leave hackathon group:', err);
         return Promise.reject(err);
       });
@@ -116,7 +116,7 @@ export class NotificationService implements OnDestroy {
    */
   joinJudging(hackathonId: number): Promise<void> {
     return this.hubConnection.invoke('JoinJudging', hackathonId)
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('Failed to join judging:', err);
         return Promise.reject(err);
       });
@@ -127,7 +127,7 @@ export class NotificationService implements OnDestroy {
    */
   leaveJudging(hackathonId: number): Promise<void> {
     return this.hubConnection.invoke('LeaveJudging', hackathonId)
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('Failed to leave judging:', err);
         return Promise.reject(err);
       });
@@ -138,7 +138,7 @@ export class NotificationService implements OnDestroy {
    */
   watchIdea(ideaId: number): Promise<void> {
     return this.hubConnection.invoke('WatchIdea', ideaId)
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('Failed to watch idea:', err);
         return Promise.reject(err);
       });
@@ -149,7 +149,7 @@ export class NotificationService implements OnDestroy {
    */
   unwatchIdea(ideaId: number): Promise<void> {
     return this.hubConnection.invoke('UnwatchIdea', ideaId)
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('Failed to unwatch idea:', err);
         return Promise.reject(err);
       });
@@ -160,7 +160,7 @@ export class NotificationService implements OnDestroy {
    */
   getOnlineJudges(hackathonId: number): Promise<any> {
     return this.hubConnection.invoke('GetOnlineJudges', hackathonId)
-      .catch(err => {
+      .catch((err: unknown) => {
         console.error('Failed to get online judges:', err);
         return Promise.reject(err);
       });
