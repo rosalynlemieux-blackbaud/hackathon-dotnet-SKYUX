@@ -44,7 +44,8 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Handles OAuth callback redirect from Blackbaud (GET) and forwards to frontend callback route
+    /// Handles OAuth callback redirect from Blackbaud (GET) and forwards to frontend root.
+    /// The SPA then routes internally to /auth/callback.
     /// </summary>
     [HttpGet("callback")]
     public IActionResult CallbackGet([FromQuery] string? code = null, [FromQuery] string? state = null, [FromQuery] string? error = null)
@@ -54,8 +55,10 @@ public class AuthController : ControllerBase
             ?? _configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()?.FirstOrDefault()
             ?? "http://localhost:4200";
 
-        var redirectBase = frontendCallback.TrimEnd('/') + "/auth/callback";
+        var redirectBase = frontendCallback.TrimEnd('/');
         var queryParts = new List<string>();
+
+        queryParts.Add("auth_callback=1");
 
         if (!string.IsNullOrWhiteSpace(code))
         {
