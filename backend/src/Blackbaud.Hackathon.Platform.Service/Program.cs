@@ -28,12 +28,12 @@ if (!string.IsNullOrEmpty(rawConnectionString) && rawConnectionString.StartsWith
     {
         // Parse postgresql://user:password@host:port/database format
         var uri = new Uri(rawConnectionString);
-        var userInfo = uri.UserInfo.Split(':');
+        var userInfo = uri.UserInfo.Split(':', 2);
         var host = uri.Host;
         var port = uri.Port > 0 ? uri.Port : 5432;
         var database = uri.AbsolutePath.TrimStart('/');
-        var username = userInfo[0];
-        var password = userInfo.Length > 1 ? userInfo[1] : "";
+        var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
 
         finalConnectionString = $"Host={host};Port={port};Username={username};Password={password};Database={database};SSL Mode=Require;Trust Server Certificate=false;";
     }
@@ -156,17 +156,24 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
         var context = services.GetRequiredService<HackathonDbContext>();
-        var logger = services.GetRequiredService<ILogger<Program>>();
         var resetOnStartup = builder.Configuration.GetValue<bool>("Database:ResetOnStartup");
 
         if (resetOnStartup)
         {
             logger.LogWarning("ResetOnStartup enabled - dropping and recreating database schema.");
-            await context.Database.ExecuteSqlRawAsync("DROP SCHEMA IF EXISTS public CASCADE;");
-            await context.Database.ExecuteSqlRawAsync("CREATE SCHEMA IF NOT EXISTS public;");
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync("DROP SCHEMA IF EXISTS public CASCADE;");
+                await context.Database.ExecuteSqlRawAsync("CREATE SCHEMA IF NOT EXISTS public;");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Schema reset failed. Continuing with schema verification.");
+            }
         }
 
         // Create database schema from current EF models
@@ -176,9 +183,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while initializing the database.");
-        throw;
+        logger.LogError(ex, "An error occurred while initializing the database. Service will continue starting.");
     }
 }
 
