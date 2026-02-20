@@ -91,7 +91,19 @@ public class HackathonsController : ControllerBase
 
         if (hackathon == null)
         {
-            _logger.LogWarning("No active/upcoming hackathon found. Creating a default hackathon for initial setup.");
+            // Return the most recent past hackathon before creating any fallback
+            hackathon = await _context.Hackathons
+                .Include(h => h.Tracks)
+                .Include(h => h.Awards)
+                .Include(h => h.JudgingCriteria)
+                .Include(h => h.Milestones)
+                .OrderByDescending(h => h.EndDate)
+                .FirstOrDefaultAsync();
+        }
+
+        if (hackathon == null)
+        {
+            _logger.LogWarning("No hackathons found. Creating a default hackathon for initial setup.");
 
             var defaultHackathon = new Shared.Models.Hackathon
             {
