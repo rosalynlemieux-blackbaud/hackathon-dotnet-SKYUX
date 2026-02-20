@@ -22,4 +22,11 @@
     <ProjectReference Include="..\Blackbaud.Hackathon.Platform.Extensions\Blackbaud.Hackathon.Platform.Extensions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="database/seed-data.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
