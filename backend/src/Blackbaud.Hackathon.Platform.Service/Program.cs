@@ -1,4 +1,5 @@
 using Blackbaud.Hackathon.Platform.Service.Attributes;
+using Blackbaud.Hackathon.Platform.Service.DataAccess;
 using Blackbaud.Hackathon.Platform.Service.HealthChecks;
 using Blackbaud.Hackathon.Platform.Service.Infrastructure;
 using Blackbaud.Hackathon.Platform.Shared.BusinessLogic;
@@ -40,6 +41,7 @@ builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<Blackbaud.Hackathon.Platform.Service.BusinessLogic.INotificationService, Blackbaud.Hackathon.Platform.Service.BusinessLogic.NotificationService>();
 builder.Services.AddScoped<Blackbaud.Hackathon.Platform.Service.BusinessLogic.IEmailService, Blackbaud.Hackathon.Platform.Service.BusinessLogic.EmailService>();
 builder.Services.AddScoped<Blackbaud.Hackathon.Platform.Service.BusinessLogic.IFileService, Blackbaud.Hackathon.Platform.Service.BusinessLogic.FileService>();
+builder.Services.AddScoped<DbSeeder>();
 
 // Add SignalR for real-time notifications
 builder.Services.AddSignalR();
@@ -144,6 +146,14 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Applying database migrations...");
         await context.Database.MigrateAsync();
         logger.LogInformation("Database migrations applied successfully.");
+        var seedOnStartup = builder.Configuration.GetValue<bool>("Database:SeedOnStartup");
+        if (seedOnStartup)
+        {
+            logger.LogInformation("SeedOnStartup enabled. Seeding from configured JSON source...");
+            var seeder = services.GetRequiredService<DbSeeder>();
+            await seeder.SeedAsync();
+            logger.LogInformation("JSON seed process completed.");
+        }
     }
     catch (Exception ex)
     {
