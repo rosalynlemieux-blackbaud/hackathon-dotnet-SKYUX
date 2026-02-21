@@ -392,6 +392,7 @@ export class TeamsComponent implements OnInit, OnDestroy {
   createError = '';
   newTeam = { name: '', description: '' };
   currentUserId = 0;
+  currentHackathonId = 0;
 
   private destroy$ = new Subject<void>();
 
@@ -417,6 +418,7 @@ export class TeamsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         hackathon => {
+          this.currentHackathonId = hackathon.id;
           this.teamService.getTeams(hackathon.id)
             .pipe(takeUntil(this.destroy$))
             .subscribe(
@@ -439,7 +441,13 @@ export class TeamsComponent implements OnInit, OnDestroy {
     this.isCreating = true;
     this.createError = '';
 
-    const hackathonId = 1; // Would get from HackathonService in real app
+    const hackathonId = this.currentHackathonId;
+    if (!hackathonId) {
+      this.createError = 'Unable to determine current hackathon.';
+      this.isCreating = false;
+      return;
+    }
+
     const team: Partial<Team> = {
       name: this.newTeam.name,
       description: this.newTeam.description,

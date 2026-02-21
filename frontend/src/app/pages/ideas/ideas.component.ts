@@ -39,8 +39,8 @@ import { Idea } from '../../models/models';
             <option value="">All Statuses</option>
             <option value="draft">Draft</option>
             <option value="submitted">Submitted</option>
-            <option value="judging">In Judging</option>
-            <option value="complete">Complete</option>
+            <option value="under_review">In Judging</option>
+            <option value="winner">Winner</option>
           </select>
 
           <select [(ngModel)]="trackFilter" (change)="applyFilters()" class="filter-select">
@@ -73,7 +73,7 @@ import { Idea } from '../../models/models';
             <span class="track-badge" [style.background-color]="getTrackColor(idea.trackId)">
               {{ getTrackName(idea.trackId) }}
             </span>
-            <span class="author">{{ idea.author?.firstName }} {{ idea.author?.lastName }}</span>
+            <span class="author">{{ (idea.author || idea.submittedByUser)?.firstName }} {{ (idea.author || idea.submittedByUser)?.lastName }}</span>
           </div>
 
           <div class="idea-stats">
@@ -230,9 +230,8 @@ import { Idea } from '../../models/models';
 
     .status-draft { background: #f0f0f0; color: #666; }
     .status-submitted { background: #e3f2fd; color: #0066cc; }
-    .status-judging { background: #fff3e0; color: #f57c00; }
-    .status-complete { background: #e8f5e9; color: #2e7d32; }
-    .status-awarded { background: #fce4ec; color: #c2185b; }
+    .status-under_review { background: #fff3e0; color: #f57c00; }
+    .status-winner { background: #e8f5e9; color: #2e7d32; }
 
     .idea-description {
       color: #666;
