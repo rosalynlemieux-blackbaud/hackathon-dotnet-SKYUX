@@ -15,6 +15,7 @@ export class AuthInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Add authorization header if token exists
     const token = this.authService.token;
+    const isAuthEndpoint = request.url.includes('/auth/login') || request.url.includes('/auth/callback');
     if (token) {
       request = request.clone({
         setHeaders: {
@@ -25,8 +26,8 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          // Unauthorized - redirect to login
+        if (error.status === 401 && !!token && !isAuthEndpoint) {
+          // Unauthorized for an authenticated request: clear stale session
           this.authService.logout();
           this.router.navigate(['/login']);
         }

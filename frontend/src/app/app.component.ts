@@ -289,6 +289,23 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to auth changes first so callback flows still update header state
+    this.authService.currentUser.subscribe(user => {
+      this.currentUser = user;
+      this.isAdmin = this.authService.isAdmin();
+      this.isJudge = this.authService.isJudge();
+
+      if (user) {
+        this.notificationService.start().catch(err => {
+          console.error('Failed to start notifications:', err);
+        });
+      } else {
+        this.notificationService.stop().catch(() => {
+          // Ignore stop errors when connection was never started
+        });
+      }
+    });
+
     const params = new URLSearchParams(window.location.search);
     const isAuthCallback = params.get('auth_callback') === '1';
     const code = params.get('code');
@@ -307,18 +324,6 @@ export class AppComponent implements OnInit {
       });
       return;
     }
-
-    // Initialize notifications
-    this.notificationService.start().catch(err => {
-      console.error('Failed to start notifications:', err);
-    });
-
-    // Subscribe to auth changes
-    this.authService.currentUser.subscribe(user => {
-      this.currentUser = user;
-      this.isAdmin = this.authService.isAdmin();
-      this.isJudge = this.authService.isJudge();
-    });
   }
 
   login(): void {
