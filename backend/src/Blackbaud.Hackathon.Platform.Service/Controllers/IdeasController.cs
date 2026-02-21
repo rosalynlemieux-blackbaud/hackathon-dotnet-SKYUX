@@ -33,6 +33,7 @@ public class IdeasController : ControllerBase
     /// Gets all ideas for a hackathon
     /// </summary>
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetIdeas([FromQuery] int? hackathonId, [FromQuery] string? status)
     {
         var query = _context.Ideas
@@ -64,6 +65,7 @@ public class IdeasController : ControllerBase
     /// Gets ideas for a specific team
     /// </summary>
     [HttpGet("team/{teamId}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetIdeasByTeam(int teamId)
     {
         var ideas = await _context.Ideas
@@ -83,6 +85,7 @@ public class IdeasController : ControllerBase
     /// Searches ideas by title/description
     /// </summary>
     [HttpGet("search")]
+    [AllowAnonymous]
     public async Task<IActionResult> SearchIdeas([FromQuery] string? q, [FromQuery] int? hackathonId)
     {
         var queryText = q?.Trim();
@@ -119,6 +122,7 @@ public class IdeasController : ControllerBase
     /// Gets a specific idea
     /// </summary>
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetIdea(int id)
     {
         var idea = await _context.Ideas

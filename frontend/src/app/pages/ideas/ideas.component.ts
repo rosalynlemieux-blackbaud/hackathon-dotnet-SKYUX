@@ -371,10 +371,30 @@ export class IdeasComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ideas => {
-          this.ideas = ideas;
-          this.ideaService.updateIdeasCache(ideas);
-          this.applyFilters();
-          this.loading = false;
+          if (ideas.length > 0)
+          {
+            this.ideas = ideas;
+            this.ideaService.updateIdeasCache(ideas);
+            this.applyFilters();
+            this.loading = false;
+            return;
+          }
+
+          // Fallback: if current hackathon filter returns no ideas, load all ideas.
+          this.ideaService.getIdeas()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(
+              allIdeas => {
+                this.ideas = allIdeas;
+                this.ideaService.updateIdeasCache(allIdeas);
+                this.applyFilters();
+                this.loading = false;
+              },
+              fallbackError => {
+                console.error('Error loading fallback ideas:', fallbackError);
+                this.loading = false;
+              }
+            );
         },
         error => {
           console.error('Error loading ideas:', error);
