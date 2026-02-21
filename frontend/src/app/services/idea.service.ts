@@ -79,8 +79,14 @@ export class IdeaService {
   }
 
   private formatDates(idea: Idea): Idea {
+    const ideaAwards = (idea as any).ideaAwards || [];
+    const submittedByUser = (idea as any).submittedByUser;
+
     return {
       ...idea,
+      author: idea.author || submittedByUser,
+      awards: idea.awards || ideaAwards.map((ia: any) => ia.award).filter((award: any) => !!award),
+      submission: idea.submission || { teamId: idea.teamId },
       createdAt: new Date(idea.createdAt),
       submittedAt: idea.submittedAt ? new Date(idea.submittedAt) : undefined
     };

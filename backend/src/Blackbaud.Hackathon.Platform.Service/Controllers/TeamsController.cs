@@ -31,6 +31,7 @@ public class TeamsController : ControllerBase
             .Include(t => t.Leader)
             .Include(t => t.TeamMembers)
                 .ThenInclude(tm => tm.User)
+            .Include(t => t.Ideas)
             .AsQueryable();
 
         if (hackathonId.HasValue)
@@ -155,8 +156,10 @@ public class TeamsController : ControllerBase
 
         var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-        // Only team leader can add members
-        if (team.LeaderId != userId)
+        // Allow leader to add anyone, or a user to join themselves
+        var isLeader = team.LeaderId == userId;
+        var isSelfJoin = request.UserId == userId;
+        if (!isLeader && !isSelfJoin)
         {
             return Forbid();
         }
@@ -198,10 +201,17 @@ public class TeamsController : ControllerBase
 
         var currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-        // Only team leader can remove members
-        if (team.LeaderId != currentUserId)
+        // Allow leader to remove anyone, or a user to remove themselves (leave team)
+        var isLeader = team.LeaderId == currentUserId;
+        var isSelfLeave = userId == currentUserId;
+        if (!isLeader && !isSelfLeave)
         {
             return Forbid();
+        }
+
+        if (team.LeaderId == userId && !isLeader)
+        {
+            return BadRequest("Team leader cannot leave without transferring leadership.");
         }
 
         var teamMember = await _context.TeamMembers

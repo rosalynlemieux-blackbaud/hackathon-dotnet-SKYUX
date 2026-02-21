@@ -61,6 +61,61 @@ public class IdeasController : ControllerBase
     }
 
     /// <summary>
+    /// Gets ideas for a specific team
+    /// </summary>
+    [HttpGet("team/{teamId}")]
+    public async Task<IActionResult> GetIdeasByTeam(int teamId)
+    {
+        var ideas = await _context.Ideas
+            .Include(i => i.Team)
+            .Include(i => i.Track)
+            .Include(i => i.SubmittedByUser)
+            .Include(i => i.IdeaAwards)
+                .ThenInclude(ia => ia.Award)
+            .Where(i => i.TeamId == teamId)
+            .OrderByDescending(i => i.CreatedAt)
+            .ToListAsync();
+
+        return Ok(ideas);
+    }
+
+    /// <summary>
+    /// Searches ideas by title/description
+    /// </summary>
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchIdeas([FromQuery] string? q, [FromQuery] int? hackathonId)
+    {
+        var queryText = q?.Trim();
+        if (string.IsNullOrWhiteSpace(queryText))
+        {
+            return Ok(new List<Idea>());
+        }
+
+        var query = _context.Ideas
+            .Include(i => i.Team)
+            .Include(i => i.Track)
+            .Include(i => i.SubmittedByUser)
+            .Include(i => i.IdeaAwards)
+                .ThenInclude(ia => ia.Award)
+            .AsQueryable();
+
+        if (hackathonId.HasValue)
+        {
+            query = query.Where(i => i.HackathonId == hackathonId.Value);
+        }
+
+        query = query.Where(i =>
+            EF.Functions.ILike(i.Title, $"%{queryText}%") ||
+            EF.Functions.ILike(i.Description, $"%{queryText}%"));
+
+        var ideas = await query
+            .OrderByDescending(i => i.CreatedAt)
+            .ToListAsync();
+
+        return Ok(ideas);
+    }
+
+    /// <summary>
     /// Gets a specific idea
     /// </summary>
     [HttpGet("{id}")]
