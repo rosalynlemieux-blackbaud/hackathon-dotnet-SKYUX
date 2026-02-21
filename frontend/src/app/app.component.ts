@@ -305,7 +305,6 @@ export class AppComponent implements OnInit {
         },
         replaceUrl: true
       });
-      return;
     }
 
     // Initialize notifications
