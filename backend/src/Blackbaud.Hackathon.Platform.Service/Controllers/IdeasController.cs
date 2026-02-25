@@ -105,8 +105,8 @@ public class IdeasController : ControllerBase
         }
 
         query = query.Where(i =>
-            EF.Functions.ILike(i.Title, $"%{queryText}%") ||
-            EF.Functions.ILike(i.Description, $"%{queryText}%"));
+            EF.Functions.Like(i.Title, $"%{queryText}%") ||
+            EF.Functions.Like(i.Description, $"%{queryText}%"));
 
         var ideas = await query
             .OrderByDescending(i => i.CreatedAt)
